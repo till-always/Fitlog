@@ -12,6 +12,19 @@
 - **设置**：深色 / 浅色主题切换、默认组间休息时长、声音与振动反馈
 - **数据存储**：完全离线本地存储（Room 数据库 + DataStore），无需联网，隐私安全
 
+## 界面预览（夜间模式）
+
+| 首页 | 训练库 | 动作详情 | 训练清单 |
+| --- | --- | --- | --- |
+| ![首页](docs/screens/home.png) | ![训练库](docs/screens/library.png) | ![动作详情](docs/screens/detail.png) | ![训练清单](docs/screens/workout.png) |
+
+| 专注模式 | 组间休息 | 日历 | 我的 |
+| --- | --- | --- | --- |
+| ![专注模式](docs/screens/focus.png) | ![组间休息](docs/screens/rest.png) | ![日历](docs/screens/calendar.png) | ![我的](docs/screens/profile.png) |
+
+深空底 + 实心厚卡 + Volt 荧光绿强调；动作图示/动图素材不随仓库分发（见下方说明），
+截图中为本地已启用媒体的效果。
+
 ## 技术栈
 
 | 层面 | 技术 |
