@@ -32,6 +32,10 @@ android {
     buildFeatures {
         compose = true
     }
+    // GIF 原样打包，避免 AAPT 重压缩浪费时间且无收益（GIF 已是压缩格式）
+    androidResources {
+        noCompress += "gif"
+    }
 }
 
 dependencies {
@@ -53,6 +57,7 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-gif:2.7.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

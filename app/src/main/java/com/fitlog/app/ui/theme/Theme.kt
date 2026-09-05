@@ -8,39 +8,43 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = Blue,
-    onPrimary = Color.White,
-    primaryContainer = BlueLight,
-    onPrimaryContainer = Color(0xFF1A4BCC),
-    secondary = Color(0xFF7C5CFF),
-    background = Color(0xFFF5F6F8),
-    onBackground = InkDark,
-    surface = Color.White,
-    onSurface = InkDark,
-    surfaceVariant = Color(0xFFF1F3F7),
-    onSurfaceVariant = Ink2Dark,
-    outline = Color(0xFFD7DCE5),
-    outlineVariant = Color(0xFFEBEDF2),
+    primary = VoltDeep,
+    onPrimary = VoltInk,
+    primaryContainer = Color(0xFFE7F7B0),
+    onPrimaryContainer = Color(0xFF3A4517),
+    secondary = Ink2Light,
+    onSecondary = Color.White,
+    background = BgLight,
+    onBackground = InkLight,
+    surface = CardLight,
+    onSurface = InkLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = Ink2Light,
+    outline = Color(0xFFC9CEDA),
+    outlineVariant = LineLight,
     error = Red,
-    tertiary = Green
+    tertiary = VoltDeep,
+    onTertiary = VoltInk
 )
 
 private val DarkColors = darkColorScheme(
-    primary = BlueDark,
-    onPrimary = Color(0xFF0B1B3D),
-    primaryContainer = Color(0xFF23304F),
-    onPrimaryContainer = Color(0xFFB9CDFF),
-    secondary = Color(0xFF9B82FF),
+    primary = Volt,
+    onPrimary = VoltInk,
+    primaryContainer = Color(0xFF3A4517),
+    onPrimaryContainer = Color(0xFFDFF59A),
+    secondary = Color(0xFF8B93A5),
+    onSecondary = Color(0xFF0C0E13),
     background = BgDark,
-    onBackground = Color(0xFFF0F2F7),
+    onBackground = Color(0xFFF2F4F8),
     surface = CardDark,
-    onSurface = Color(0xFFF0F2F7),
+    onSurface = Color(0xFFF2F4F8),
     surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = Color(0xFFA8B0BF),
+    onSurfaceVariant = Color(0xFF9BA3B0),
     outline = Color(0xFF3A4152),
     outlineVariant = LineDark,
     error = Red,
-    tertiary = Green
+    tertiary = Volt,
+    onTertiary = VoltInk
 )
 
 @Composable
@@ -53,3 +57,7 @@ fun FitLogTheme(
         content = content
     )
 }
+
+/** 强调文字色：暗色底用 Volt，浅色底用深橄榄（保证对比度） */
+@Composable
+fun accentText(): Color = if (isSystemInDarkTheme()) VoltTextDark else VoltTextLight

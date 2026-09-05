@@ -14,3 +14,12 @@
 *.keystore
 !debug.keystore
 .kotlin
+
+# Gym visual 版权媒体：不进仓库（本地开发用 .tools/fetch_media.sh 拉取）
+# 授权说明见 app/src/main/assets/dataset/NOTICE.md
+app/src/main/assets/ex/
+app/src/main/assets/exg/
+
+# JVM 崩溃日志
+hs_err_*.log
+replay_*.log

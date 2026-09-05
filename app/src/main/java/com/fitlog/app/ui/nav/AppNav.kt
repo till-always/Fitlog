@@ -1,5 +1,6 @@
 package com.fitlog.app.ui.nav
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -71,7 +72,10 @@ fun AppNav() {
             if (showBar) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 0.dp
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.border(
+                        1.5.dp, MaterialTheme.colorScheme.outlineVariant, androidx.compose.ui.graphics.RectangleShape
+                    )
                 ) {
                     tabs.forEach { tab ->
                         val selected = route == tab.route
@@ -132,9 +136,18 @@ fun AppNav() {
                 arguments = listOf(navArgument("pick") { defaultValue = "0" })
             ) { LibraryScreen(nav, it.arguments?.getString("pick") == "1") }
             composable(
-                "exdetail/{id}",
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { ExerciseDetailScreen(nav, it.arguments?.getLong("id") ?: 0L) }
+                "exdetail/{id}?ctx={ctx}",
+                arguments = listOf(
+                    navArgument("id") { type = NavType.LongType },
+                    navArgument("ctx") { defaultValue = "" }
+                )
+            ) {
+                ExerciseDetailScreen(
+                    nav,
+                    it.arguments?.getLong("id") ?: 0L,
+                    fromWorkout = it.arguments?.getString("ctx") == "workout"
+                )
+            }
             composable(
                 "custom?exId={exId}",
                 arguments = listOf(navArgument("exId") { type = NavType.LongType; defaultValue = -1L })

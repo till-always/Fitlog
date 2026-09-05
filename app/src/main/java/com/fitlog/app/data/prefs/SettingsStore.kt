@@ -6,8 +6,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore("fitlog_settings")
@@ -31,6 +33,7 @@ class SettingsStore(private val context: Context) {
         val gender = stringPreferencesKey("profile_gender")
         val height = intPreferencesKey("profile_height")
         val weight = floatPreferencesKey("profile_weight")
+        val deletedDataset = stringSetPreferencesKey("deleted_dataset_exercises")
     }
 
     val darkMode: Flow<Boolean> = context.dataStore.data.map { it[K.dark] ?: false }
@@ -57,5 +60,13 @@ class SettingsStore(private val context: Context) {
         it[K.gender] = p.gender
         it[K.height] = p.heightCm
         it[K.weight] = p.weightKg
+    }
+
+    /** 用户手动删除的数据集动作名：导入时跳过，避免删除后随数据集复活 */
+    suspend fun deletedDatasetExercises(): Set<String> =
+        context.dataStore.data.first()[K.deletedDataset] ?: emptySet()
+
+    suspend fun addDeletedDatasetExercise(name: String) = context.dataStore.edit {
+        it[K.deletedDataset] = (it[K.deletedDataset] ?: emptySet()) + name
     }
 }

@@ -5,13 +5,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -56,16 +59,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.fitlog.app.FitLogApp
 import com.fitlog.app.R
+import com.fitlog.app.data.model.Parts
 import com.fitlog.app.data.prefs.UserProfile
 import com.fitlog.app.ui.components.FitConfirmDialog
 import com.fitlog.app.ui.components.PartBadge
+import com.fitlog.app.ui.components.ProgressRing
 import com.fitlog.app.ui.components.SectionHeader
 import com.fitlog.app.ui.components.TagChip
+import com.fitlog.app.ui.components.ThickCard
+import com.fitlog.app.ui.components.VoltButton
+import com.fitlog.app.ui.components.pressClick
 import com.fitlog.app.ui.components.toast
-import com.fitlog.app.ui.theme.Green
-import com.fitlog.app.ui.theme.HeroBlue1
-import com.fitlog.app.ui.theme.HeroBlue2
-import com.fitlog.app.ui.theme.HeroBlue3
+import com.fitlog.app.ui.theme.Volt
+import com.fitlog.app.ui.theme.VoltDeep
+import com.fitlog.app.ui.theme.VoltInk
+import com.fitlog.app.ui.theme.accentText
 import com.fitlog.app.util.planEstMinutes
 import com.fitlog.app.util.todayStr
 import com.fitlog.app.util.weekdayCn
@@ -84,7 +92,19 @@ fun HomeScreen(nav: NavController) {
     val folders by app.repo.folders().collectAsStateWithLifecycle(initialValue = emptyList())
     val profile by app.settings.profile.collectAsStateWithLifecycle(initialValue = UserProfile())
     val todaySessions by app.repo.sessionsByDate(todayStr()).collectAsStateWithLifecycle(initialValue = emptyList())
+    val today = LocalDate.now()
+    val weekSessions by app.repo.sessionsBetween(
+        today.with(java.time.DayOfWeek.MONDAY).toString(),
+        today.with(java.time.DayOfWeek.SUNDAY).toString()
+    ).collectAsStateWithLifecycle(initialValue = emptyList())
     val trained = todaySessions.isNotEmpty()
+    // 今日完成度 = 已完成组 / 今日计划总组数；本周频次 = 已练天数
+    val todaySetsDone = todaySessions.sumOf { it.setsDone }
+    val todaySetsTotal = todaySessions.sumOf { it.setsTotal }
+    val todayMinutes = todaySessions.sumOf { it.durSec } / 60
+    val todayVolume = todaySessions.sumOf { it.volume.toDouble() }.toFloat()
+    val ringProgress = if (todaySetsTotal > 0) todaySetsDone.toFloat() / todaySetsTotal else 0f
+    val trainedDates = weekSessions.map { it.date }.toSet()
     var startSheet by remember { mutableStateOf(false) }
     var folderSheet by remember { mutableStateOf(false) }
     var delFolder by remember { mutableStateOf<Long?>(null) }
@@ -105,9 +125,7 @@ fun HomeScreen(nav: NavController) {
         hour < 18 -> "下午好"
         else -> "晚上好"
     }
-    val today = LocalDate.now()
     val dateLine = "${today.monthValue}月${today.dayOfMonth}日 星期${weekdayCn(today.toString())} · 今天练点什么？"
-
     Column(
         Modifier
             .fillMaxSize()
@@ -123,44 +141,86 @@ fun HomeScreen(nav: NavController) {
             Box(
                 Modifier
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (trained) Green.copy(alpha = 0.12f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                    .background(if (trained) Volt.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceVariant)
                     .padding(horizontal = 12.dp, vertical = 7.dp)
             ) {
                 Text(
                     if (trained) "今天已训练 ✓" else "今天还未训练",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (trained) Green else MaterialTheme.colorScheme.primary
+                    color = if (trained) accentText() else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
         Spacer(Modifier.height(14.dp))
 
-        // 开始训练
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(Brush.linearGradient(listOf(HeroBlue1, HeroBlue2, HeroBlue3)))
-                .clickable { startSheet = true }
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("开始训练", fontSize = 19.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
-                    Text("选择计划，或来一次空白训练", fontSize = 12.5.sp, color = Color.White.copy(alpha = 0.65f), modifier = Modifier.padding(top = 5.dp))
-                }
-                Box(
-                    Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
+        // 今日概览：完成度环 + 本周频次条
+        ThickCard(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ProgressRing(
+                    progress = ringProgress,
+                    size = 86.dp,
+                    stroke = 8.dp
                 ) {
-                    Icon(Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(26.dp))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "${(ringProgress * 100).toInt()}%",
+                            fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                        Text("今日", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                Column(Modifier.weight(1f).padding(start = 18.dp)) {
+                    Text(
+                        todaySessions.firstOrNull()?.planName ?: "今天还没开练",
+                        fontSize = 14.sp, fontWeight = FontWeight.Bold
+                    )
+                    Row(
+                        Modifier.padding(top = 8.dp),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text("$todayMinutes 分", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("$todaySetsDone 组", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            if (todayVolume >= 1000) "%.1f t".format(todayVolume / 1000) else "${todayVolume.toInt()} kg",
+                            fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Row(Modifier.padding(top = 12.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+                        repeat(7) { i ->
+                            val d = today.with(java.time.DayOfWeek.MONDAY).plusDays(i.toLong()).toString()
+                            val hit = d in trainedDates
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(
+                                        when {
+                                            hit && d == todayStr() -> MaterialTheme.colorScheme.primary
+                                            hit -> MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                                            else -> MaterialTheme.colorScheme.surfaceVariant
+                                        }
+                                    )
+                            )
+                        }
+                    }
+                    Text(
+                        "本周 ${trainedDates.size} / 6 练",
+                        fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
                 }
             }
         }
+        Spacer(Modifier.height(12.dp))
+
+        // 开始训练
+        VoltButton("▶  开始训练", onClick = { startSheet = true }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
 
         // 训练库卡片
@@ -176,17 +236,17 @@ fun HomeScreen(nav: NavController) {
                     Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFF3B7CFF), Color(0xFF7C5CFF)))),
+                        .background(Brush.linearGradient(listOf(Volt.copy(alpha = 0.85f), VoltDeep))),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(painterResource(R.drawable.ic_nav_workout), null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    Icon(painterResource(R.drawable.ic_nav_workout), null, tint = VoltInk, modifier = Modifier.size(24.dp))
                 }
                 Column(Modifier.weight(1f).padding(start = 14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("训练库", fontSize = 15.5.sp, fontWeight = FontWeight.Bold)
                         Text(
                             " ${exercises.size} 个动作",
-                            fontSize = 11.sp, color = MaterialTheme.colorScheme.primary,
+                            fontSize = 11.sp, color = accentText(),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .padding(start = 6.dp)
@@ -222,7 +282,7 @@ fun HomeScreen(nav: NavController) {
                         label,
                         fontSize = 13.sp,
                         fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium,
-                        color = if (on) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
                             .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
@@ -256,15 +316,28 @@ fun HomeScreen(nav: NavController) {
                 val d = java.time.Instant.ofEpochMilli(last).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                 "上次训练：${d.monthValue}月${d.dayOfMonth}日"
             } ?: "从未训练"
+            val firstPart = items.firstOrNull()?.let { itp ->
+                exercises.firstOrNull { e -> e.id == itp.exerciseId }?.part
+            } ?: "其他"
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .clickable { nav.navigate("planDetail/${pw.plan.id}") }
+                    .pressClick { nav.navigate("planDetail/${pw.plan.id}") }
             ) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.height(IntrinsicSize.Min)) {
+                    Box(
+                        Modifier
+                            .width(4.dp)
+                            .fillMaxHeight()
+                            .background(Parts.color(firstPart))
+                    )
+                    Row(
+                        Modifier.weight(1f).padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     Column(Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -298,6 +371,7 @@ fun HomeScreen(nav: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Filled.PlayArrow, "开始", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    }
                     }
                 }
             }

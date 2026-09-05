@@ -10,11 +10,17 @@ import androidx.room.Relation
 data class ExerciseEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val part: String,      // 胸/背/肩/手臂/腿/臀部/腹部
+    val enName: String = "",   // 数据集英文名（详情页副标题）
+    val part: String,      // 胸/背/肩/手臂/腿/臀部/腹部/有氧
     val equip: String,     // 徒手/哑铃/杠铃/固定器械/弹力带/壶铃/其他
     val mode: String,      // wr=重量×次数 r=仅次数 t=计时
     val tip: String,
-    val isCustom: Boolean = false
+    val isCustom: Boolean = false,
+    val steps: String = "",        // 分步教学（\n 分隔）
+    val image: String = "",        // 资产缩略图路径（assets/ex/xxx.jpg → "ex/xxx.jpg"）
+    val anim: String = "",         // 动图演示路径（assets/exg/xxx.gif → "exg/xxx.gif"）
+    val targetMuscle: String = "", // 目标肌群（中文）
+    val secMuscles: String = ""    // 次要肌群（英文原名，逗号分隔，展示时经 Muscles 翻译）
 )
 
 @Entity(tableName = "folders")

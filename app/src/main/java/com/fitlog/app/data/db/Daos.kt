@@ -22,6 +22,13 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE name IN (:names)")
     suspend fun byNames(names: List<String>): List<ExerciseEntity>
 
+    @Query("SELECT name FROM exercises")
+    suspend fun allNames(): List<String>
+
+    /** 导入升级用的一次性全量读取（Flow 版供 UI 订阅） */
+    @Query("SELECT * FROM exercises")
+    suspend fun allList(): List<ExerciseEntity>
+
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun count(): Int
 
@@ -36,6 +43,9 @@ interface ExerciseDao {
 
     @Delete
     suspend fun delete(e: ExerciseEntity)
+
+    @Delete
+    suspend fun deleteAll(list: List<ExerciseEntity>)
 }
 
 @Dao
@@ -77,6 +87,9 @@ interface PlanDao {
 
     @Query("SELECT COUNT(*) FROM plan_items WHERE exerciseId = :exerciseId")
     suspend fun countItemsOfExercise(exerciseId: Long): Int
+
+    @Query("SELECT DISTINCT exerciseId FROM plan_items")
+    suspend fun referencedExerciseIds(): List<Long>
 
     @Insert
     suspend fun insertItems(items: List<PlanItemEntity>)

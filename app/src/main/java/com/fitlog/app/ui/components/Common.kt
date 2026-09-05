@@ -36,7 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
 import com.fitlog.app.data.model.Parts
-import com.fitlog.app.ui.theme.Green
+import com.fitlog.app.ui.theme.Volt
+import com.fitlog.app.ui.theme.VoltInk
 
 @Composable
 fun PartBadge(part: String, size: Dp = 44.dp, radius: Dp = 13.dp) {
@@ -98,10 +99,10 @@ fun CheckCircle(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifie
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(if (done) Green else Color.Transparent)
+            .background(if (done) Volt else Color.Transparent)
             .border(
                 width = 2.dp,
-                color = if (done) Green else MaterialTheme.colorScheme.outline,
+                color = if (done) Volt else MaterialTheme.colorScheme.outline,
                 shape = CircleShape
             )
             .clickable { onClick() },
@@ -111,7 +112,7 @@ fun CheckCircle(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifie
             Icon(
                 Icons.Filled.Check,
                 contentDescription = "完成",
-                tint = Color.White,
+                tint = VoltInk,
                 modifier = Modifier.size(size * 0.55f)
             )
         }

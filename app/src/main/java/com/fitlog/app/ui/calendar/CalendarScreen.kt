@@ -45,7 +45,6 @@ import androidx.navigation.NavController
 import com.fitlog.app.FitLogApp
 import com.fitlog.app.ui.components.StatTile
 import com.fitlog.app.ui.components.toast
-import com.fitlog.app.ui.theme.Green
 import com.fitlog.app.util.monthRange
 import com.fitlog.app.util.streakOf
 import com.fitlog.app.util.todayStr
@@ -67,6 +66,9 @@ fun CalendarScreen(nav: NavController) {
     val byDate = sessions.groupBy { it.date }
     val monthSec = sessions.sumOf { it.durSec.toLong() }
     val streak = streakOf(allSessions.map { it.date })
+    // 热力强度：按当日训练时长归一化
+    val dayLoad = byDate.mapValues { (_, list) -> list.sumOf { it.durSec } }
+    val maxLoad = dayLoad.values.maxOrNull() ?: 0
 
     val firstDate = LocalDate.of(year, month, 1)
     val lead = firstDate.dayOfWeek.value - 1
@@ -124,14 +126,24 @@ fun CalendarScreen(nav: NavController) {
                                     val dateStr = "%04d-%02d-%02d".format(year, month, d)
                                     val has = byDate.containsKey(dateStr)
                                     val isToday = dateStr == todayStr()
+                                    // 训练量 → Volt 透明度分级（有练就至少可见）
+                                    val ratio = if (has && maxLoad > 0) (dayLoad[dateStr] ?: 0).toFloat() / maxLoad else 0f
+                                    val heat = if (has) 0.38f + 0.62f * ratio else 0f
                                     Box(
                                         Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(if (has) Green else MaterialTheme.colorScheme.surface)
+                                            .fillMaxSize()
+                                            .padding(2.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                when {
+                                                    has -> MaterialTheme.colorScheme.tertiary.copy(alpha = heat)
+                                                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                                }
+                                            )
                                             .then(
-                                                if (isToday) Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                                                else Modifier
+                                                if (isToday) Modifier.border(
+                                                    2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)
+                                                ) else Modifier
                                             )
                                             .clickable {
                                                 if (has) nav.navigate("day/$dateStr")
@@ -141,10 +153,10 @@ fun CalendarScreen(nav: NavController) {
                                     ) {
                                         Text(
                                             "$d",
-                                            fontSize = 14.5.sp,
+                                            fontSize = 13.5.sp,
                                             fontWeight = if (has || isToday) FontWeight.Bold else FontWeight.Normal,
                                             color = when {
-                                                has -> androidx.compose.ui.graphics.Color.White
+                                                has -> MaterialTheme.colorScheme.onTertiary
                                                 isToday -> MaterialTheme.colorScheme.primary
                                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
                                             }
@@ -189,7 +201,7 @@ fun CalendarScreen(nav: NavController) {
             }
         }
         Text(
-            "点绿色日期查看当天训练内容",
+            "点高亮日期查看当天训练内容 · 颜色越亮训练量越大",
             fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxWidth()

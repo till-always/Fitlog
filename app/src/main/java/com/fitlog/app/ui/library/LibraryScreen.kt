@@ -188,7 +188,16 @@ fun LibraryScreen(nav: NavController, pickMode: Boolean) {
                             }
                         )
                     }
-                    item { Spacer(Modifier.height(if (pickMode) 20.dp else 70.dp)) }
+                    item {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "共 ${list.size} 个动作 · 动作图示 © Gym visual — gymvisual.com",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(Modifier.height(if (pickMode) 20.dp else 70.dp))
+                        }
+                    }
                 }
             }
         }
@@ -210,7 +219,19 @@ private fun ExerciseRow(e: ExerciseEntity, selected: Boolean, pickMode: Boolean,
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PartBadge(e.part)
+        if (e.image.isNotBlank()) {
+            coil.compose.AsyncImage(
+                model = "file:///android_asset/" + e.image,
+                contentDescription = e.name,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        } else {
+            PartBadge(e.part)
+        }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

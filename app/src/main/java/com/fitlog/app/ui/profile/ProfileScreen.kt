@@ -56,6 +56,9 @@ import com.fitlog.app.data.db.PhotoEntity
 import com.fitlog.app.data.prefs.UserProfile
 import com.fitlog.app.ui.components.SectionHeader
 import com.fitlog.app.ui.components.toast
+import com.fitlog.app.ui.theme.Volt
+import com.fitlog.app.ui.theme.VoltDeep
+import com.fitlog.app.ui.theme.VoltInk
 import com.fitlog.app.util.streakOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -127,12 +130,12 @@ fun ProfileScreen(nav: NavController) {
                     Modifier
                         .size(64.dp)
                         .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Color(0xFF3B7CFF), Color(0xFF7C5CFF)))),
+                        .background(Brush.linearGradient(listOf(Volt, VoltDeep))),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         profile.name.firstOrNull()?.toString() ?: "F",
-                        fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = Color.White
+                        fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = VoltInk
                     )
                 }
                 Column(Modifier.weight(1f).padding(start = 16.dp)) {
