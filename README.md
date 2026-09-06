@@ -25,6 +25,13 @@
 深空底 + 实心厚卡 + Volt 荧光绿强调；动作图示/动图素材不随仓库分发（见下方说明），
 截图中为本地已启用媒体的效果。
 
+## 下载安装
+
+最新 APK（约 8MB，不含图示素材）：
+[FitLog-v0.2.0.apk](https://github.com/till-always/Fitlog/releases/download/v0.2.0/FitLog-v0.2.0.apk) ·
+[全部版本](https://github.com/till-always/Fitlog/releases)
+安装时需允许「安装未知来源应用」。不含图示素材，动作以彩色部位徽章展示（见下方素材说明）。
+
 ## 技术栈
 
 | 层面 | 技术 |
