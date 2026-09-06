@@ -38,7 +38,9 @@ data class TrainingEx(
     val mode: String,     // wr / r / t
     val restSec: Int,
     val rows: List<TrainingRow>,
-    val customName: String? = null
+    val customName: String? = null,
+    val image: String = "",
+    val anim: String = ""
 ) {
     val displayName: String get() = customName ?: name
 }
@@ -83,6 +85,7 @@ class TrainingViewModel(app: android.app.Application) : AndroidViewModel(app) {
     val repo = ctx.repo
 
     var workout by mutableStateOf<WorkoutState?>(null); private set
+    private var startedFor: Long? = null
     var rest by mutableStateOf<RestState?>(null); private set
     var timed by mutableStateOf<TimedState?>(null); private set
     var summary by mutableStateOf<SummaryState?>(null); private set
@@ -103,6 +106,7 @@ class TrainingViewModel(app: android.app.Application) : AndroidViewModel(app) {
 
     /** 每次进入训练页都无条件按所点计划重建（杜绝旧训练残留） */
     fun start(planId: Long?) {
+        startedFor = planId?.takeIf { it > 0 }
         viewModelScope.launch {
             val items = mutableListOf<TrainingEx>()
             var planName = "空白训练"
@@ -120,7 +124,8 @@ class TrainingViewModel(app: android.app.Application) : AndroidViewModel(app) {
                             restSec = item.restSec,
                             rows = List(item.sets) {
                                 TrainingRow(weight = item.weight, reps = item.reps, timeSec = item.timeSec)
-                            }
+                            },
+                            image = e.image, anim = e.anim
                         )
                     }
                 }
@@ -138,6 +143,13 @@ class TrainingViewModel(app: android.app.Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /** 重入守卫：同一计划（或空白）的训练进行中时，重新进入不重建——保留已添加动作与计时 */
+    fun startIfNeeded(planId: Long?) {
+        val target = planId?.takeIf { it > 0 }
+        if (workout != null && startedFor == target) return
+        start(planId)
     }
 
     fun totals(): Triple<Int, Int, Float> {
@@ -264,7 +276,8 @@ class TrainingViewModel(app: android.app.Application) : AndroidViewModel(app) {
                 }
                 TrainingEx(
                     exId = e.id, name = e.name, part = e.part, equip = e.equip, mode = e.mode,
-                    restSec = defaultRest, rows = rows
+                    restSec = defaultRest, rows = rows,
+                    image = e.image, anim = e.anim
                 )
             }
             if (additions.isNotEmpty()) {

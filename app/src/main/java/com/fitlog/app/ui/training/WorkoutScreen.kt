@@ -83,8 +83,8 @@ fun WorkoutScreen(nav: NavController, planId: Long?) {
     val vm: TrainingViewModel = viewModel(viewModelStoreOwner = activity)
     val ctx = LocalContext.current
 
-    // 每次进入训练页都按所点计划无条件重建，杜绝旧训练残留
-    LaunchedEffect(planId) { vm.start(planId) }
+    // 每次进入训练页：若同一计划已有进行中的训练则保留（从选择器返回不重置），否则按计划重建
+    LaunchedEffect(planId) { vm.startIfNeeded(planId) }
 
     val w = vm.workout
     if (w == null) {
@@ -546,7 +546,24 @@ private fun ExerciseCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PartBadge(ex.part)
+            // 头像：数据集缩略图（无素材时回退部位徽章）
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                if (ex.image.isNotBlank()) {
+                    coil.compose.AsyncImage(
+                        model = "file:///android_asset/" + ex.image,
+                        contentDescription = ex.displayName,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    PartBadge(ex.part)
+                }
+            }
             Column(Modifier.weight(1f).padding(start = 10.dp)) {
                 Text(
                     ex.displayName, fontSize = 15.sp, fontWeight = FontWeight.Bold,
