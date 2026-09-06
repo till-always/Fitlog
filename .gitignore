@@ -23,3 +23,4 @@ app/src/main/assets/exg/
 # JVM 崩溃日志
 hs_err_*.log
 replay_*.log
+.media_bak/
