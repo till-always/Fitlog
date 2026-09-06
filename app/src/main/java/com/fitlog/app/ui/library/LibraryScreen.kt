@@ -88,7 +88,7 @@ fun LibraryScreen(nav: NavController, pickMode: Boolean) {
                     onClick = { nav.navigate("custom?exId=-1") },
                     icon = { Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.onPrimary) },
                     text = { Text("自定义动作", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, maxLines = 1) },
-                    containerColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             }
         },
